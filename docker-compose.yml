@@ -1,0 +1,19 @@
+version: "3.9"
+
+services:
+  app:
+    build:
+      context: .
+    container_name: url-shortener
+    ports:
+      - "8080:8080"
+    depends_on:
+      - redis
+    environment:
+      - REDIS_HOST=redis:6379
+
+  redis:
+    image: redis:7.2
+    container_name: url-shortener-redis
+    ports:
+      - "6379:6379"

@@ -1,0 +1,44 @@
+# Go
+/bin/
+/build/
+/dist/
+/vendor/
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+
+# Go module files (cache)
+/go.sum
+/go.mod~
+
+# Swaggo (автогенерируемая документация)
+docs/docs.go
+docs/swagger.json
+docs/swagger.yaml
+
+# IDEs
+.vscode/
+.idea/
+*.sw?
+*.sublime*
+
+# Mac OS
+.DS_Store
+
+# Logs
+*.log
+
+# Env
+.env
+
+# Docker
+*.pid
+*.sock
+.docker/
+.dockerignore
+
+.idea
