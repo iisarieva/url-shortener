@@ -8,12 +8,12 @@ import (
 	"github.com/labstack/echo/v4"
 	goRedis "github.com/redis/go-redis/v9"
 
-	"url-shortener/internal/delivery/http"
-	rds "url-shortener/internal/repository/redis"
-	"url-shortener/internal/usecase"
+	"github.com/iisarieva/url-shortener/internal/delivery/http"
+	rds "github.com/iisarieva/url-shortener/internal/repository/redis"
+	"github.com/iisarieva/url-shortener/internal/usecase"
 
+	_ "github.com/iisarieva/url-shortener/docs"
 	echoSwagger "github.com/swaggo/echo-swagger"
-	_ "url-shortener/docs"
 
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"

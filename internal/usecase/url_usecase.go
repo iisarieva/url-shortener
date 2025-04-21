@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	"url-shortener/internal/domain/repository"
+	"github.com/iisarieva/url-shortener/internal/domain/repository"
 
 	"github.com/rs/zerolog/log"
 )

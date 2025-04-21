@@ -1,15 +1,21 @@
-# Используем официальный образ Go
-FROM golang:1.24.1 as builder
+# Этап сборки
+FROM golang:1.24.1 AS builder
 
-# Рабочая директория внутри контейнера
+# Рабочая директория
 WORKDIR /app
 
-# Копируем go.mod и go.sum и устанавливаем зависимости
+# Устанавливаем swag для генерации Swagger-доков
+RUN go install github.com/swaggo/swag/cmd/swag@latest
+
+# Копируем go.mod и go.sum и качаем зависимости
 COPY go.mod go.sum ./
 RUN go mod download
 
 # Копируем весь проект
 COPY . .
+
+# Генерируем Swagger-документацию
+RUN swag init -g cmd/server/main.go
 
 # Собираем бинарник
 RUN go build -o server ./cmd/server
@@ -17,14 +23,17 @@ RUN go build -o server ./cmd/server
 # Финальный минимальный образ
 FROM debian:bookworm-slim
 
-# Устанавливаем нужные утилиты (например, curl)
+# Устанавливаем сертификаты
 RUN apt-get update && apt-get install -y ca-certificates && rm -rf /var/lib/apt/lists/*
 
-# Копируем бинарник из билдера
+# Копируем бинарник
 COPY --from=builder /app/server /server
 
-# Порт, на котором работает приложение
+# Копируем Swagger-доки (если ты хочешь отдавать их как часть приложения)
+COPY --from=builder /app/docs /app/docs
+
+# Открываем порт
 EXPOSE 8080
 
-# Команда запуска
+# Запускаем сервер
 ENTRYPOINT ["/server"]

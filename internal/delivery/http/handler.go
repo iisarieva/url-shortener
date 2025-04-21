@@ -3,8 +3,8 @@ package http
 import (
 	"net/http"
 
+	"github.com/iisarieva/url-shortener/internal/usecase"
 	"github.com/labstack/echo/v4"
-	"url-shortener/internal/usecase"
 )
 
 // Handler — структура HTTP-хендлера
