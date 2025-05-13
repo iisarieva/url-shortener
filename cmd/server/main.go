@@ -2,12 +2,12 @@ package main
 
 import (
 	"context"
+	"github.com/iisarieva/url-shortener/internal/delivery"
 	"github.com/labstack/echo/v4"
 	goRedis "github.com/redis/go-redis/v9"
 	"os"
 	"time"
 
-	"github.com/iisarieva/url-shortener/internal/delivery/http"
 	rds "github.com/iisarieva/url-shortener/internal/repository/redis"
 	"github.com/iisarieva/url-shortener/internal/usecase"
 
@@ -34,7 +34,7 @@ func main() {
 
 	urlRepo := rds.NewRedisRepository(redisClient)
 	urlUsecase := usecase.NewURLUseCase(urlRepo)
-	handler := http.NewHandler(urlUsecase)
+	handler := delivery.NewHandler(urlUsecase)
 
 	handler.RegisterRoutes(e)
 
