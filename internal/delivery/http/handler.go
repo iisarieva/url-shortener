@@ -3,34 +3,29 @@ package http
 import (
 	"net/http"
 
+	"github.com/iisarieva/url-shortener/configs"
 	"github.com/iisarieva/url-shortener/internal/usecase"
 	"github.com/labstack/echo/v4"
 )
 
-// Handler — структура HTTP-хендлера
 type Handler struct {
 	usecase *usecase.URLUseCase
 }
 
-// NewHandler — конструктор хендлера
 func NewHandler(u *usecase.URLUseCase) *Handler {
 	return &Handler{usecase: u}
 }
 
-// RegisterRoutes — регистрация маршрутов
 func (h *Handler) RegisterRoutes(e *echo.Echo) {
 	e.POST("/shorten", h.ShortenURL)
 	e.GET("/:short", h.Redirect)
 	e.DELETE("/:short", h.Delete)
-
 }
 
-// Структура запроса
 type ShortenRequest struct {
 	OriginalURL string `json:"original_url"`
 }
 
-// Структура ответа
 type ShortenResponse struct {
 	ShortURL string `json:"short_url"`
 }
@@ -49,26 +44,21 @@ type ShortenResponse struct {
 func (h *Handler) ShortenURL(c echo.Context) error {
 	var req ShortenRequest
 
-	// Парсим JSON из тела запроса
 	if err := c.Bind(&req); err != nil {
-		return c.JSON(http.StatusBadRequest, map[string]string{"error": "невалидный JSON"})
+		return c.JSON(http.StatusBadRequest, errorResponse("invalid JSON"))
 	}
 
-	// Проверяем, что ссылка не пустая
 	if req.OriginalURL == "" {
-		return c.JSON(http.StatusBadRequest, map[string]string{"error": "original_url обязателен"})
+		return c.JSON(http.StatusBadRequest, errorResponse("original_url is required"))
 	}
 
-	// Генерация и сохранение короткой ссылки
 	shortCode, err := h.usecase.CreateShortURL(c.Request().Context(), req.OriginalURL)
 	if err != nil {
-		return c.JSON(http.StatusInternalServerError, map[string]string{"error": "ошибка при создании короткой ссылки"})
+		return c.JSON(http.StatusInternalServerError, errorResponse("failed to create short URL"))
 	}
 
-	// Базовый адрес можно вынести в конфиг
-	baseURL := "http://localhost:8080/"
 	return c.JSON(http.StatusOK, ShortenResponse{
-		ShortURL: baseURL + shortCode,
+		ShortURL: configs.BaseURL + shortCode,
 	})
 }
 
@@ -84,16 +74,15 @@ func (h *Handler) ShortenURL(c echo.Context) error {
 func (h *Handler) Redirect(c echo.Context) error {
 	shortCode := c.Param("short")
 	if shortCode == "" {
-		return c.JSON(400, map[string]string{"error": "short code обязателен"})
+		return c.JSON(http.StatusBadRequest, errorResponse("short code is required"))
 	}
 
 	originalURL, err := h.usecase.GetOriginalURL(c.Request().Context(), shortCode)
 	if err != nil {
-		return c.JSON(404, map[string]string{"error": "ссылка не найдена"})
+		return c.JSON(http.StatusNotFound, errorResponse("URL not found"))
 	}
 
-	// 301 Moved Permanently
-	return c.Redirect(301, originalURL)
+	return c.Redirect(http.StatusMovedPermanently, originalURL)
 }
 
 // Delete — обработчик DELETE /:short
@@ -107,13 +96,17 @@ func (h *Handler) Redirect(c echo.Context) error {
 func (h *Handler) Delete(c echo.Context) error {
 	shortCode := c.Param("short")
 	if shortCode == "" {
-		return c.JSON(400, map[string]string{"error": "short code обязателен"})
+		return c.JSON(http.StatusBadRequest, errorResponse("short code is required"))
 	}
 
 	err := h.usecase.DeleteShortURL(c.Request().Context(), shortCode)
 	if err != nil {
-		return c.JSON(404, map[string]string{"error": "ссылка не найдена или уже удалена"})
+		return c.JSON(http.StatusNotFound, errorResponse("URL not found or already deleted"))
 	}
 
-	return c.NoContent(204) // Успешное удаление
+	return c.NoContent(http.StatusNoContent)
+}
+
+func errorResponse(msg string) map[string]string {
+	return map[string]string{"error": msg}
 }

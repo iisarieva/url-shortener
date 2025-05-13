@@ -2,11 +2,10 @@ package main
 
 import (
 	"context"
-	"os"
-	"time"
-
 	"github.com/labstack/echo/v4"
 	goRedis "github.com/redis/go-redis/v9"
+	"os"
+	"time"
 
 	"github.com/iisarieva/url-shortener/internal/delivery/http"
 	rds "github.com/iisarieva/url-shortener/internal/repository/redis"
@@ -25,25 +24,7 @@ func main() {
 
 	e := echo.New()
 
-	// 👇 логируем каждый HTTP-запрос
-	e.Use(func(next echo.HandlerFunc) echo.HandlerFunc {
-		return func(c echo.Context) error {
-			req := c.Request()
-			res := c.Response()
-			start := time.Now()
-
-			err := next(c)
-
-			log.Info().
-				Str("method", req.Method).
-				Str("path", req.URL.Path).
-				Int("status", res.Status).
-				Dur("duration", time.Since(start)).
-				Msg("🌐 HTTP-запрос")
-
-			return err
-		}
-	})
+	e.Use(loggingMiddleware)
 
 	redisClient := createRedisClient()
 
@@ -62,7 +43,6 @@ func main() {
 	e.Logger.Fatal(e.Start(":8080"))
 }
 
-// Создание Redis клиента
 func createRedisClient() *goRedis.Client {
 	addr := os.Getenv("REDIS_HOST")
 	if addr == "" {
@@ -76,4 +56,23 @@ func createRedisClient() *goRedis.Client {
 		DB:       0,
 	})
 
+}
+
+func loggingMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		req := c.Request()
+		res := c.Response()
+		start := time.Now()
+
+		err := next(c)
+
+		log.Info().
+			Str("method", req.Method).
+			Str("path", req.URL.Path).
+			Int("status", res.Status).
+			Dur("duration", time.Since(start)).
+			Msg("🌐 HTTP-запрос")
+
+		return err
+	}
 }

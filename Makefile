@@ -1,6 +1,11 @@
 APP_NAME = server
 ENTRYPOINT = cmd/server/main.go
 
+
+# поднимаем проект с Redis
+up:
+	docker-compose up --build
+
 # генерируем Swagger-документацию
 swag:
 	swag init -g $(ENTRYPOINT)
@@ -20,10 +25,6 @@ tidy:
 # билдим docker-образ
 docker:
 	docker build -t url-shortener .
-
-# поднимаем проект с Redis
-up:
-	docker-compose up --build
 
 # выключаем контейнеры
 down:

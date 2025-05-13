@@ -1,6 +1,6 @@
 # ✂️ URL Shortener
 
-Простой сервис для сокращения ссылок на Go с использованием Echo, Redis, Docker и Swagger.
+Сервис для сокращения ссылок на Go с использованием Echo, Redis, Docker и Swagger.
 
 ---
 

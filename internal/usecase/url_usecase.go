@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/iisarieva/url-shortener/internal/domain/repository"
-
 	"github.com/rs/zerolog/log"
 )
 
@@ -20,7 +19,7 @@ func NewURLUseCase(r repository.URLRepository) *URLUseCase {
 	return &URLUseCase{repo: r}
 }
 
-// CreateShortURL генерирует короткий код, сохраняет его в Redis
+// CreateShortURL генерирует короткий код и сохраняет его в Redis
 func (u *URLUseCase) CreateShortURL(ctx context.Context, originalURL string) (string, error) {
 	start := time.Now()
 
@@ -32,32 +31,32 @@ func (u *URLUseCase) CreateShortURL(ctx context.Context, originalURL string) (st
 			Err(err).
 			Str("short_code", shortCode).
 			Str("original_url", originalURL).
-			Msg("❌ Не удалось сохранить короткую ссылку")
+			Msg("failed to save short URL")
 		return "", err
 	}
 	log.Info().
 		Str("short_code", shortCode).
 		Str("original_url", originalURL).
 		Dur("duration", time.Since(start)).
-		Msg("✅ Сокращена ссылка")
+		Msg("short URL created")
 	return shortCode, nil
 }
 
-// GetOriginalURL достаёт оригинальный URL по shortCode
+// GetOriginalURL возвращает оригинальный URL по shortCode
 func (u *URLUseCase) GetOriginalURL(ctx context.Context, shortCode string) (string, error) {
 	originalURL, err := u.repo.Get(ctx, shortCode)
 	if err != nil {
 		log.Error().
 			Err(err).
 			Str("short_code", shortCode).
-			Msg("❌ Ошибка при получении оригинального URL")
+			Msg("failed to retrieve original URL")
 		return "", err
 	}
 
 	log.Info().
 		Str("short_code", shortCode).
 		Str("original_url", originalURL).
-		Msg("🔗 Получен оригинальный URL")
+		Msg("original URL found")
 
 	return originalURL, nil
 }
@@ -69,18 +68,17 @@ func (u *URLUseCase) DeleteShortURL(ctx context.Context, shortCode string) error
 		log.Warn().
 			Err(err).
 			Str("short_code", shortCode).
-			Msg("⚠️ Ссылка не найдена или уже удалена")
+			Msg("short URL not found or already deleted")
 		return err
 	}
 
 	log.Info().
 		Str("short_code", shortCode).
-		Msg("🗑️ Ссылка удалена")
+		Msg("short URL deleted")
 
 	return nil
 }
 
-// Вспомогательная функция: генерирует случайный short code
 func generateShortCode() string {
 	b := make([]byte, 6)
 	_, _ = rand.Read(b)

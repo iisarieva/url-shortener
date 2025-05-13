@@ -2,7 +2,6 @@ package redis
 
 import (
 	"context"
-	"errors"
 	"time"
 
 	"github.com/redis/go-redis/v9"
@@ -25,14 +24,14 @@ func (r *RedisRepository) Save(ctx context.Context, shortCode string, originalUR
 			Err(err).
 			Str("short_code", shortCode).
 			Str("original_url", originalURL).
-			Msg("❌ Redis: не удалось сохранить ссылку")
+			Msg("failed to save URL to Redis")
 		return err
 	}
 
 	log.Debug().
 		Str("short_code", shortCode).
 		Str("original_url", originalURL).
-		Msg("💾 Redis: ссылка сохранена")
+		Msg("URL saved to Redis")
 	return nil
 }
 
@@ -43,14 +42,14 @@ func (r *RedisRepository) Get(ctx context.Context, shortCode string) (string, er
 		log.Error().
 			Err(err).
 			Str("short_code", shortCode).
-			Msg("❌ Redis: не удалось получить ссылку")
+			Msg("URL not found in Redis")
 		return "", err
 	}
 
 	log.Debug().
 		Str("short_code", shortCode).
 		Str("original_url", originalURL).
-		Msg("📦 Redis: ссылка получена")
+		Msg("URL retrieved from Redis")
 	return originalURL, nil
 }
 
@@ -61,18 +60,18 @@ func (r *RedisRepository) Delete(ctx context.Context, shortCode string) error {
 		log.Error().
 			Err(err).
 			Str("short_code", shortCode).
-			Msg("❌ Redis: ошибка при удалении")
+			Msg("failed to delete from Redis")
 		return err
 	}
 	if count == 0 {
 		log.Warn().
 			Str("short_code", shortCode).
-			Msg("⚠️ Redis: ссылка не найдена для удаления")
-		return errors.New("not found")
+			Msg("no URL found to delete in Redis")
+		return redis.Nil
 	}
 
 	log.Debug().
 		Str("short_code", shortCode).
-		Msg("🗑️ Redis: ссылка удалена")
+		Msg("URL deleted from Redis")
 	return nil
 }
