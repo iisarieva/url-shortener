@@ -2,6 +2,7 @@ package delivery
 
 import (
 	"net/http"
+	"net/url"
 
 	"github.com/iisarieva/url-shortener/configs"
 	"github.com/iisarieva/url-shortener/internal/usecase"
@@ -30,6 +31,18 @@ type ShortenResponse struct {
 	ShortURL string `json:"short_url"`
 }
 
+func errorResponse(msg string) map[string]string {
+	return map[string]string{"error": msg}
+}
+
+func isValidURL(raw string) bool {
+	u, err := url.ParseRequestURI(raw)
+	if err != nil {
+		return false
+	}
+	return u.Scheme != "" && u.Host != ""
+}
+
 // ShortenURL — обработчик POST /shorten
 // @Summary Создание короткой ссылки
 // @Description Принимает оригинальный URL и возвращает сокращённый
@@ -52,6 +65,9 @@ func (h *Handler) ShortenURL(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, errorResponse("original_url is required"))
 	}
 
+	if !isValidURL(req.OriginalURL) {
+		return c.JSON(http.StatusBadRequest, errorResponse("invalid URL format"))
+	}
 	shortCode, err := h.usecase.CreateShortURL(c.Request().Context(), req.OriginalURL)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, errorResponse("failed to create short URL"))
@@ -105,8 +121,4 @@ func (h *Handler) Delete(c echo.Context) error {
 	}
 
 	return c.NoContent(http.StatusNoContent)
-}
-
-func errorResponse(msg string) map[string]string {
-	return map[string]string{"error": msg}
 }
